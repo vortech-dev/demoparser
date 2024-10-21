@@ -1,5 +1,5 @@
 import pandas as pd
-from typing import Dict, Sequence, Optional, List, Tuple
+from typing import Dict, Sequence, Optional, List, Tuple, Any
 
 class DemoParser:
     def __init__(self, path: str) -> None: ...
@@ -39,4 +39,25 @@ class DemoParser:
 
         Returns:
             pd.DataFrame: Dataframe of all the parsed props for each player at each tick.
+        """
+
+    def parse_user_cmd(self) -> List[Dict[str, Any]]:
+        """Parse user commands from the demo.
+
+        Returns:
+            List[Dict[str, Any]]: A list of dictionaries containing user command data.
+            Each dictionary includes:
+            - entity_id: int
+            - viewangle_x: float
+            - viewangle_y: float
+            - viewangle_z: float
+            - buttonstate_1: int
+            - buttonstate_2: int
+            - buttonstate_3: int
+            - forwardmove: float
+            - leftmove: float
+            - impulse: int
+            - mouse_dx: int
+            - mouse_dy: int
+            - input_history: List[Dict[str, Any]]
         """
