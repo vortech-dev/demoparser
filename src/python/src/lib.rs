@@ -752,6 +752,69 @@ impl DemoParser {
             Ok(pandas_df.to_object(py))
         })
     }
+
+    pub fn parse_user_cmd(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
+        let settings = ParserInputs {
+            // ... other fields ...
+            parse_usercmd: true, // Enable user command parsing
+        };
+        let mut parser = Parser::new(settings, parser::parse_demo::ParsingMode::Normal);
+        let output = match parser.parse_demo(&self.mmap) {
+            Ok(output) => output,
+            Err(e) => return Err(Exception::new_err(format!("{e}"))),
+        };
+
+        let user_cmds: Vec<PyObject> = output.entities.iter().enumerate().filter_map(|(entity_id, entity_opt)| {
+            entity_opt.as_ref().and_then(|entity| {
+                let cmd_dict = PyDict::new(py);
+                let mut has_usercmd_data = false;
+                
+                for (prop_id, variant) in &entity.props {
+                    if *prop_id >= USERCMD_BASEID {
+                        has_usercmd_data = true;
+                        let prop_name = match *prop_id {
+                            USERCMD_VIEWANGLE_X => "viewangle_x",
+                            USERCMD_VIEWANGLE_Y => "viewangle_y",
+                            USERCMD_VIEWANGLE_Z => "viewangle_z",
+                            USERCMD_BUTTONSTATE_1 => "buttonstate_1",
+                            USERCMD_BUTTONSTATE_2 => "buttonstate_2",
+                            USERCMD_BUTTONSTATE_3 => "buttonstate_3",
+                            USERCMD_FORWARDMOVE => "forwardmove",
+                            USERCMD_LEFTMOVE => "leftmove",
+                            USERCMD_IMPULSE => "impulse",
+                            USERCMD_MOUSE_DX => "mouse_dx",
+                            USERCMD_MOUSE_DY => "mouse_dy",
+                            USERCMD_INPUT_HISTORY_BASEID => "input_history",
+                            _ => continue,
+                        };
+                        let _ = cmd_dict.set_item(prop_name, value_to_pyobject(py, variant));
+                    }
+                }
+
+                if has_usercmd_data {
+                    let _ = cmd_dict.set_item("entity_id", entity_id.to_object(py));
+                    Some(cmd_dict.into())
+                } else {
+                    None
+                }
+            })
+        }).collect();
+
+        Ok(user_cmds.to_object(py))
+    }
+    
+}
+
+fn value_to_pyobject(py: Python, value: &Variant) -> PyObject {
+    match value {
+        Variant::F32(v) => v.to_object(py),
+        Variant::I32(v) => v.to_object(py),
+        Variant::U32(v) => v.to_object(py),
+        Variant::U64(v) => v.to_object(py),
+        Variant::Bool(v) => v.to_object(py),
+        Variant::InputHistory(v) => v.to_object(py),
+        _ => py.None(),
+    }
 }
 
 /// <https://github.com/pola-rs/polars/blob/master/examples/python_rust_compiled_function/src/ffi.rs>
