@@ -353,6 +353,31 @@ True/Flase if player is pressing button.
 | kill_reward_total | m_iKillReward |
 | cash_earned_total | m_iCashEarned |
 
+### Parsing User Commands
+
+To parse user commands from the demo, use the `parse_user_cmd` method:
+
+```python
+from demoparser2 import DemoParser
+
+parser = DemoParser("path_to_demo.dem")
+user_cmds = parser.parse_user_cmd()
+
+# user_cmds is a list of dictionaries containing user command data
+for cmd in user_cmds:
+    print(f"Entity ID: {cmd['entity_id']}")
+    print(f"View Angle: ({cmd['viewangle_x']}, {cmd['viewangle_y']}, {cmd['viewangle_z']})")
+    print(f"Button States: {cmd['buttonstate_1']}, {cmd['buttonstate_2']}, {cmd['buttonstate_3']}")
+    print(f"Movement: Forward={cmd['forwardmove']}, Left={cmd['leftmove']}")
+    print(f"Mouse: dx={cmd['mouse_dx']}, dy={cmd['mouse_dy']}")
+    print("Input History:")
+    for input_event in cmd['input_history']:
+        print(input_event)
+    print("---")
+```
+
+This will return a list of dictionaries, each containing the user command data for a specific entity (player) in the demo.
+
 ## Other parsers
 Go: https://github.com/markus-wa/demoinfocs-golang  
 C#: https://github.com/saul/demofile-net  
